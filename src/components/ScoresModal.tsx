@@ -1,16 +1,16 @@
 type ScoresModalProps = {
   isGameOver: boolean;
   gameOutcome?: "WIN" | "LOSE"; // new optional prop
-  playerGameWins: number;
-  computerGameWins: number;
+  totalWins: number;
+  totalLosses: number;
   closeGameScoresModal: () => void;
 };
 
 export default function ScoresModal({
   isGameOver,
   gameOutcome,
-  playerGameWins,
-  computerGameWins,
+  totalWins,
+  totalLosses,
   closeGameScoresModal,
 }: ScoresModalProps) {
   let headerText = "Game Scores";
@@ -34,14 +34,14 @@ export default function ScoresModal({
       <div className="game-scores">
         <div>
           Total wins:
-          <span className="player-game-score" data-player-game-wins>
-            {playerGameWins}
+          <span className="player-game-score" data-testid="total-wins">
+            {totalWins}
           </span>
         </div>
         <div>
           Total losses:
-          <span className="computer-game-score" data-computer-game-wins>
-            {computerGameWins}
+          <span className="computer-game-score" data-testid="total-losses">
+            {totalLosses}
           </span>
         </div>
       </div>

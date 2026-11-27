@@ -7,8 +7,7 @@ describe("NavigationButtons component", () => {
     const { getByRole } = render(
       <NavigationButtons
         resetGame={() => {}}
-        setPlayerGameWins={() => {}}
-        setComputerGameWins={() => {}}
+        resetTotals={() => {}}
         openRulesModal={() => {}}
         openGameScoresModal={() => {}}
       />,
@@ -25,16 +24,14 @@ describe("NavigationButtons component", () => {
 
   test("calls correct callbacks on button clicks", () => {
     const resetGameMock = vi.fn();
-    const setPlayerGameWinsMock = vi.fn();
-    const setComputerGameWinsMock = vi.fn();
+    const resetTotalsMock = vi.fn();
     const openRulesModalMock = vi.fn();
     const openGameScoresModalMock = vi.fn();
 
     const { getByRole } = render(
       <NavigationButtons
         resetGame={resetGameMock}
-        setPlayerGameWins={setPlayerGameWinsMock}
-        setComputerGameWins={setComputerGameWinsMock}
+        resetTotals={resetTotalsMock}
         openRulesModal={openRulesModalMock}
         openGameScoresModal={openGameScoresModalMock}
       />,
@@ -42,35 +39,13 @@ describe("NavigationButtons component", () => {
 
     fireEvent.click(getByRole("button", { name: /reset button/i }));
     expect(resetGameMock).toHaveBeenCalled();
-    expect(setPlayerGameWinsMock).toHaveBeenCalledWith(0);
-    expect(setComputerGameWinsMock).toHaveBeenCalledWith(0);
+    expect(resetTotalsMock).toHaveBeenCalledTimes(1);
 
     fireEvent.click(getByRole("button", { name: /see rules button/i }));
     expect(openRulesModalMock).toHaveBeenCalled();
 
     fireEvent.click(getByRole("button", { name: /game scores button/i }));
     expect(openGameScoresModalMock).toHaveBeenCalled();
-  });
-});
-
-describe("NavigationButtons reset behavior", () => {
-  test("calls localStorage.removeItem on reset", () => {
-    const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem");
-
-    const { getByRole } = render(
-      <NavigationButtons
-        resetGame={() => {}}
-        setPlayerGameWins={() => {}}
-        setComputerGameWins={() => {}}
-        openRulesModal={() => {}}
-        openGameScoresModal={() => {}}
-      />,
-    );
-
-    fireEvent.click(getByRole("button", { name: /reset button/i }));
-    expect(removeItemSpy).toHaveBeenCalledWith("gameScores");
-
-    removeItemSpy.mockRestore();
   });
 });
 
@@ -87,8 +62,7 @@ describe("NavigationButtons ripple effect", () => {
     const { getByRole } = render(
       <NavigationButtons
         resetGame={() => {}}
-        setPlayerGameWins={() => {}}
-        setComputerGameWins={() => {}}
+        resetTotals={() => {}}
         openRulesModal={() => {}}
         openGameScoresModal={() => {}}
       />,

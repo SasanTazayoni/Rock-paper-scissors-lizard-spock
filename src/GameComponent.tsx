@@ -2,9 +2,8 @@ import { useState } from "react";
 import { getComputerChoice } from "./utils/computerChoice";
 import { getPlayerChoice } from "./utils/playerChoice";
 import { playGameRound } from "./utils/gameLogic";
-import { updateGameScores } from "./utils/gameScores";
 import { Selection } from "./utils/rules";
-import { useGameWins } from "./hooks/useGameWins";
+import { useGameTotals } from "./hooks/useGameTotals";
 import { useOverlayHeight } from "./hooks/useOverlayHeight";
 import RulesModal from "./components/RulesModal";
 import ScoresModal from "./components/ScoresModal";
@@ -24,12 +23,7 @@ type RoundResult = {
 };
 
 function GameComponent() {
-  const {
-    playerGameWins,
-    setPlayerGameWins,
-    computerGameWins,
-    setComputerGameWins,
-  } = useGameWins();
+  const { totalWins, totalLosses, recordGame, resetTotals } = useGameTotals();
 
   const [playerScore, setPlayerScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
@@ -56,11 +50,7 @@ function GameComponent() {
     setComputerScore(nextComputerScore);
 
     if (nextPlayerScore >= 5 || nextComputerScore >= 5) {
-      updateGameScores(
-        nextPlayerScore >= 5 ? "WIN" : "LOSE",
-        setPlayerGameWins,
-        setComputerGameWins,
-      );
+      recordGame(nextPlayerScore >= 5 ? "WIN" : "LOSE");
       setShowGameScoresModal(true);
     }
 
@@ -101,8 +91,7 @@ function GameComponent() {
       <nav className="btns">
         <NavigationButtons
           resetGame={resetGame}
-          setPlayerGameWins={setPlayerGameWins}
-          setComputerGameWins={setComputerGameWins}
+          resetTotals={resetTotals}
           openRulesModal={openRulesModal}
           openGameScoresModal={() => setShowGameScoresModal(true)}
         />
@@ -141,8 +130,8 @@ function GameComponent() {
           <ScoresModal
             isGameOver={isGameOver}
             gameOutcome={playerScore > computerScore ? "WIN" : "LOSE"}
-            playerGameWins={playerGameWins}
-            computerGameWins={computerGameWins}
+            totalWins={totalWins}
+            totalLosses={totalLosses}
             closeGameScoresModal={closeGameScoresModal}
           />
         )}

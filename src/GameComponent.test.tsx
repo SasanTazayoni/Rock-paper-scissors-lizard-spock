@@ -3,7 +3,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react";
 import GameComponent from "./GameComponent";
 import RulesModal from "./components/RulesModal";
 import * as gameLogic from "./utils/gameLogic.ts";
-import * as gameScores from "./utils/gameScores";
+import * as scoreStorage from "./utils/scoreStorage";
 
 vi.mock("./components/Footer", () => ({
   default: () => <footer>Footer Mock</footer>,
@@ -107,67 +107,51 @@ describe("Score updates on selection", () => {
 });
 
 describe("Game Over Behavior", () => {
-  test("game ends when PLAYER reaches 5 points, ScoresModal opens, wins updated", async () => {
+  test("game ends when PLAYER reaches 5 points, ScoresModal opens, wins updated", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
-    const updateSpy = vi
-      .spyOn(gameScores, "updateGameScores")
-      .mockImplementation(() => {});
 
-    const { getByRole, getByLabelText, container } = render(<GameComponent />);
-    const rockBtn = getByRole("button", { name: /Rock icon/i });
-
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
-
-    await waitFor(() => {
-      expect(getByLabelText("Player score").textContent).toBe("5");
-      expect(
-        container.querySelector("[data-game-scores-modal]"),
-      ).toBeInTheDocument();
-      expect(updateSpy).toHaveBeenCalledWith(
-        "WIN",
-        expect.any(Function),
-        expect.any(Function),
-      );
-    });
-  });
-
-  test("game ends when COMPUTER reaches 5 points, ScoresModal opens, wins updated", async () => {
-    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
-    const updateSpy = vi
-      .spyOn(gameScores, "updateGameScores")
-      .mockImplementation(() => {});
-
-    const { getByRole, getByLabelText, container } = render(<GameComponent />);
-    const rockBtn = getByRole("button", { name: /Rock icon/i });
-
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
-
-    await waitFor(() => {
-      expect(getByLabelText("Computer score").textContent).toBe("5");
-      expect(
-        container.querySelector("[data-game-scores-modal]"),
-      ).toBeInTheDocument();
-      expect(updateSpy).toHaveBeenCalledWith(
-        "LOSE",
-        expect.any(Function),
-        expect.any(Function),
-      );
-    });
-  });
-
-  test("selections after game over are ignored and total wins update only once", () => {
-    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
-    const updateSpy = vi
-      .spyOn(gameScores, "updateGameScores")
-      .mockImplementation(() => {});
-
-    const { getByRole, getByLabelText, queryByTestId } = render(
+    const { getByRole, getByLabelText, getByTestId } = render(
       <GameComponent />,
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
     for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
-    expect(updateSpy).toHaveBeenCalledTimes(1);
+
+    expect(getByLabelText("Player score").textContent).toBe("5");
+    expect(getByTestId("game-scores-modal")).toBeInTheDocument();
+    expect(getByTestId("total-wins")).toHaveTextContent("1");
+    expect(getByTestId("total-losses")).toHaveTextContent("0");
+    expect(scoreStorage.loadTotals()).toEqual({ wins: 1, losses: 0 });
+  });
+
+  test("game ends when COMPUTER reaches 5 points, ScoresModal opens, losses updated", () => {
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
+
+    const { getByRole, getByLabelText, getByTestId } = render(
+      <GameComponent />,
+    );
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+
+    expect(getByLabelText("Computer score").textContent).toBe("5");
+    expect(getByTestId("game-scores-modal")).toBeInTheDocument();
+    expect(getByTestId("total-wins")).toHaveTextContent("0");
+    expect(getByTestId("total-losses")).toHaveTextContent("1");
+    expect(scoreStorage.loadTotals()).toEqual({ wins: 0, losses: 1 });
+  });
+
+  test("selections after game over are ignored and total wins update only once", () => {
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
+    const saveSpy = vi.spyOn(scoreStorage, "saveTotals");
+
+    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+      <GameComponent />,
+    );
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    expect(saveSpy).toHaveBeenCalledTimes(1);
 
     // The Scores modal is open, but the selection buttons are still reachable
     // by keyboard, so extra clicks must not count.
@@ -176,7 +160,50 @@ describe("Game Over Behavior", () => {
 
     expect(getByLabelText("Player score").textContent).toBe("5");
     expect(queryByTestId("player-result-5")).not.toBeInTheDocument();
-    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(getByTestId("total-wins")).toHaveTextContent("1");
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test("shows totals saved by a previous visit", () => {
+    localStorage.setItem(
+      "gameScores",
+      JSON.stringify({ player: 3, computer: 2 }),
+    );
+
+    const { getByLabelText, getByTestId } = render(<GameComponent />);
+    fireEvent.click(getByLabelText("Game Scores Button"));
+
+    expect(getByTestId("total-wins")).toHaveTextContent("3");
+    expect(getByTestId("total-losses")).toHaveTextContent("2");
+  });
+});
+
+describe("when localStorage is blocked", () => {
+  test("the game still renders, plays and counts totals", () => {
+    const blocked = () => {
+      throw new DOMException("Storage is disabled", "SecurityError");
+    };
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(blocked);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(blocked);
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(blocked);
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
+
+    const { getByRole, getByLabelText, getByTestId } = render(
+      <GameComponent />,
+    );
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    expect(getByTestId("total-wins")).toHaveTextContent("1");
+
+    fireEvent.click(getByTestId("continue-button"));
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    expect(getByTestId("total-wins")).toHaveTextContent("2");
+
+    fireEvent.click(getByTestId("continue-button"));
+    fireEvent.click(getByLabelText("Reset Button"));
+    fireEvent.click(getByLabelText("Game Scores Button"));
+    expect(getByTestId("total-wins")).toHaveTextContent("0");
   });
 });
 
@@ -202,6 +229,22 @@ describe("Reset button", () => {
       expect(queryByTestId("player-latest-result")).toBeNull();
       expect(queryByTestId("computer-latest-result")).toBeNull();
     });
+  });
+
+  test("clicking Reset also clears saved totals", () => {
+    localStorage.setItem(
+      "gameScores",
+      JSON.stringify({ player: 3, computer: 2 }),
+    );
+
+    const { getByLabelText, getByTestId } = render(<GameComponent />);
+
+    fireEvent.click(getByLabelText("Reset Button"));
+    fireEvent.click(getByLabelText("Game Scores Button"));
+
+    expect(getByTestId("total-wins")).toHaveTextContent("0");
+    expect(getByTestId("total-losses")).toHaveTextContent("0");
+    expect(localStorage.getItem("gameScores")).toBeNull();
   });
 });
 

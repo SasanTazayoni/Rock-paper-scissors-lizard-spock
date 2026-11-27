@@ -1,24 +1,18 @@
-import type { Dispatch, SetStateAction, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 type NavigationButtonsProps = {
   resetGame: () => void;
-  setPlayerGameWins: Dispatch<SetStateAction<number>>;
-  setComputerGameWins: Dispatch<SetStateAction<number>>;
+  resetTotals: () => void;
   openRulesModal: () => void;
   openGameScoresModal: () => void;
 };
 
 export default function NavigationButtons({
   resetGame,
-  setPlayerGameWins,
-  setComputerGameWins,
+  resetTotals,
   openRulesModal,
   openGameScoresModal,
 }: NavigationButtonsProps) {
-  const clearLocalStorage = () => {
-    localStorage.removeItem("gameScores");
-  };
-
   const handleRippleEffect = (e: MouseEvent<HTMLButtonElement>) => {
     const target = e.target as HTMLButtonElement;
     const x = e.clientX - target.offsetLeft;
@@ -33,10 +27,8 @@ export default function NavigationButtons({
   };
 
   const handleResetClick = () => {
-    clearLocalStorage();
     resetGame();
-    setPlayerGameWins(0);
-    setComputerGameWins(0);
+    resetTotals();
   };
 
   return (

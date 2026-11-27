@@ -7,8 +7,8 @@ describe("ScoresModal", () => {
     const { getByText } = render(
       <ScoresModal
         isGameOver={false}
-        playerGameWins={1}
-        computerGameWins={2}
+        totalWins={1}
+        totalLosses={2}
         closeGameScoresModal={() => {}}
       />
     );
@@ -23,8 +23,8 @@ describe("ScoresModal", () => {
       <ScoresModal
         isGameOver={true}
         gameOutcome="WIN"
-        playerGameWins={4}
-        computerGameWins={2}
+        totalWins={4}
+        totalLosses={2}
         closeGameScoresModal={() => {}}
       />
     );
@@ -37,8 +37,8 @@ describe("ScoresModal", () => {
       <ScoresModal
         isGameOver={true}
         gameOutcome="LOSE"
-        playerGameWins={4}
-        computerGameWins={5}
+        totalWins={4}
+        totalLosses={5}
         closeGameScoresModal={() => {}}
       />
     );
@@ -51,8 +51,8 @@ describe("ScoresModal", () => {
     const { getByText } = render(
       <ScoresModal
         isGameOver={false}
-        playerGameWins={1}
-        computerGameWins={0}
+        totalWins={1}
+        totalLosses={0}
         closeGameScoresModal={closeHandler}
       />
     );
@@ -65,8 +65,8 @@ describe("ScoresModal", () => {
     const { getByText, queryByText } = render(
       <ScoresModal
         isGameOver={true}
-        playerGameWins={4}
-        computerGameWins={5}
+        totalWins={4}
+        totalLosses={5}
         closeGameScoresModal={() => {}}
       />
     );
