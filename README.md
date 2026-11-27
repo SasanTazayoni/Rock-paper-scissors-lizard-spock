@@ -119,7 +119,7 @@ The main game UI with an open modal: <br>
 
   ![The game scores modal](documentation/scoresmodal.jpg)
 
-- Modals can be closed by clicking on the button corresponding to the modal or by clicking on the overlay.
+- Modals can be closed by clicking on the button corresponding to the modal, by clicking on the overlay or by pressing Escape. While a modal is open, the rest of the page can't be used, and keyboard focus moves into the modal and returns to where it was when the modal closes.
 - The game icons have a hover effect on them indicating that they can be interacted with: <br>
 
   ![The game icons](documentation/icons.jpg)

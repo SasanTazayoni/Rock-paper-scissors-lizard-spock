@@ -1,7 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import GameComponent from "./GameComponent";
-import RulesModal from "./components/RulesModal";
 import * as gameLogic from "./utils/gameLogic.ts";
 import * as scoreStorage from "./utils/scoreStorage";
 
@@ -9,17 +8,15 @@ vi.mock("./components/Footer", () => ({
   default: () => <footer>Footer Mock</footer>,
 }));
 
-vi.mock("./hooks/useOverlayHeight", () => ({
-  useOverlayHeight: vi.fn(),
-}));
+const pressEscape = (dialog: HTMLElement) =>
+  fireEvent(dialog, new Event("cancel", { cancelable: true }));
 
 describe("GameComponent – initial render", () => {
-  test("shows the Rules modal on first load", () => {
-    render(<GameComponent />);
+  test("shows the Rules modal on first load, with focus on Play game", () => {
+    const { getByTestId, getByRole } = render(<GameComponent />);
 
-    const dialog = document.querySelector("[data-modal].open");
-    expect(dialog).toBeInTheDocument();
-    expect(document.querySelector("[data-overlay].open")).toBeInTheDocument();
+    expect(getByTestId("rules-modal")).toHaveAttribute("open");
+    expect(getByRole("button", { name: /play game/i })).toHaveFocus();
   });
 
   test("renders navigation buttons (Reset, See Rules, Game Scores)", () => {
@@ -249,7 +246,7 @@ describe("Reset button", () => {
 });
 
 describe("Rules Modal Close Behavior", () => {
-  test("clicking the Rules modal close button closes the Rules modal", () => {
+  test("clicking Play game closes the Rules modal", () => {
     const { getByTestId, getByText, queryByTestId } = render(<GameComponent />);
     expect(getByTestId("rules-modal")).toBeInTheDocument();
     const playButton = getByText(/play game/i);
@@ -257,14 +254,25 @@ describe("Rules Modal Close Behavior", () => {
     expect(queryByTestId("rules-modal")).not.toBeInTheDocument();
   });
 
-  test("clicking the Play game button closes the Rules modal", () => {
-    const closeRulesModal = vi.fn();
-    const { getByText } = render(
-      <RulesModal showRulesModal={true} closeRulesModal={closeRulesModal} />,
-    );
+  test("pressing Escape closes the Rules modal", () => {
+    const { getByTestId, queryByTestId } = render(<GameComponent />);
+
+    pressEscape(getByTestId("rules-modal"));
+
+    expect(queryByTestId("rules-modal")).not.toBeInTheDocument();
+  });
+
+  test("closing a reopened Rules modal returns focus to See rules", () => {
+    const { getByLabelText, getByText } = render(<GameComponent />);
+    fireEvent.click(getByText(/play game/i));
+
+    const seeRules = getByLabelText("See Rules Button");
+    seeRules.focus();
+    fireEvent.click(seeRules);
+    expect(getByText(/play game/i)).toHaveFocus();
 
     fireEvent.click(getByText(/play game/i));
-    expect(closeRulesModal).toHaveBeenCalledTimes(1);
+    expect(seeRules).toHaveFocus();
   });
 });
 
@@ -292,6 +300,42 @@ describe("ScoresModal close behavior", () => {
       expect(getByLabelText("Player score").textContent).toBe("0");
       expect(getByLabelText("Computer score").textContent).toBe("0");
     });
+  });
+
+  test("pressing Escape after game over also resets the game", () => {
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
+    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+      <GameComponent />,
+    );
+
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    expect(getByRole("dialog", { name: "Game Over! You lost!" })).toBeVisible();
+
+    pressEscape(getByTestId("game-scores-modal"));
+
+    expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
+    expect(getByLabelText("Computer score").textContent).toBe("0");
+  });
+
+  test("opening scores mid-game and pressing Continue keeps the current game", () => {
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
+    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+      <GameComponent />,
+    );
+
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+    fireEvent.click(rockBtn);
+    fireEvent.click(rockBtn);
+
+    fireEvent.click(getByLabelText("Game Scores Button"));
+    expect(getByRole("dialog", { name: "Game Scores" })).toBeVisible();
+
+    fireEvent.click(getByTestId("continue-button"));
+
+    expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
+    expect(getByLabelText("Player score").textContent).toBe("2");
+    expect(queryByTestId("player-result-1")).toBeInTheDocument();
   });
 });
 

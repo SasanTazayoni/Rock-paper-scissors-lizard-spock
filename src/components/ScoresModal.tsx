@@ -1,36 +1,35 @@
+import Modal from "./Modal";
+import type { GameOutcome } from "../hooks/useGameTotals";
+
 type ScoresModalProps = {
-  isGameOver: boolean;
-  gameOutcome?: "WIN" | "LOSE"; // new optional prop
+  /** The result of the game that just ended, or null when opened mid-game. */
+  outcome: GameOutcome | null;
   totalWins: number;
   totalLosses: number;
   closeGameScoresModal: () => void;
 };
 
+const headings: Record<GameOutcome, string> = {
+  WIN: "Game Over! You won!",
+  LOSE: "Game Over! You lost!",
+};
+
 export default function ScoresModal({
-  isGameOver,
-  gameOutcome,
+  outcome,
   totalWins,
   totalLosses,
   closeGameScoresModal,
 }: ScoresModalProps) {
-  let headerText = "Game Scores";
-
-  if (isGameOver) {
-    headerText = "Game Over!";
-    if (gameOutcome === "WIN") headerText += " You won!";
-    else if (gameOutcome === "LOSE") headerText += " You lost!";
-  }
-
   return (
-    <dialog
-      data-testid="game-scores-modal"
-      className="game-scores-modal open"
-      role="dialog"
-      data-game-scores-modal
-      aria-modal="true"
-      aria-labelledby="game-scores-modal-title"
+    <Modal
+      className="game-scores-modal"
+      titleId="game-scores-modal-title"
+      testId="game-scores-modal"
+      onClose={closeGameScoresModal}
     >
-      <h2 id="game-scores-modal-title">{headerText}</h2>
+      <h2 id="game-scores-modal-title">
+        {outcome ? headings[outcome] : "Game Scores"}
+      </h2>
       <div className="game-scores">
         <div>
           Total wins:
@@ -47,12 +46,11 @@ export default function ScoresModal({
       </div>
       <button
         className="btn"
-        aria-label="Continue"
         data-testid="continue-button"
         onClick={closeGameScoresModal}
       >
         Continue
       </button>
-    </dialog>
+    </Modal>
   );
 }

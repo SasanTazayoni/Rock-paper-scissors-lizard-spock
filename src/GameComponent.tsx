@@ -4,7 +4,6 @@ import { getPlayerChoice } from "./utils/playerChoice";
 import { playGameRound } from "./utils/gameLogic";
 import { Selection } from "./utils/rules";
 import { useGameTotals } from "./hooks/useGameTotals";
-import { useOverlayHeight } from "./hooks/useOverlayHeight";
 import RulesModal from "./components/RulesModal";
 import ScoresModal from "./components/ScoresModal";
 import ResultColumn from "./components/ResultColumn";
@@ -31,9 +30,6 @@ function GameComponent() {
   const [showGameScoresModal, setShowGameScoresModal] = useState(false);
   const [history, setHistory] = useState<RoundResult[]>([]);
   const isGameOver = playerScore >= 5 || computerScore >= 5;
-  const isOverlayOpen = showRulesModal || showGameScoresModal || isGameOver;
-
-  useOverlayHeight(isOverlayOpen);
 
   const handleSelection = (selection: Selection) => {
     if (isGameOver) return;
@@ -128,15 +124,14 @@ function GameComponent() {
 
         {showGameScoresModal && (
           <ScoresModal
-            isGameOver={isGameOver}
-            gameOutcome={playerScore > computerScore ? "WIN" : "LOSE"}
+            outcome={
+              isGameOver ? (playerScore > computerScore ? "WIN" : "LOSE") : null
+            }
             totalWins={totalWins}
             totalLosses={totalLosses}
             closeGameScoresModal={closeGameScoresModal}
           />
         )}
-
-        {isOverlayOpen && <div className="overlay open" data-overlay></div>}
       </main>
       <Footer></Footer>
     </>

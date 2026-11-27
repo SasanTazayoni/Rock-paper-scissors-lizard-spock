@@ -3,76 +3,77 @@ import { describe, test, expect, vi } from "vitest";
 import ScoresModal from "./ScoresModal";
 
 describe("ScoresModal", () => {
-  test("renders the default header and both scores", () => {
-    const { getByText } = render(
+  test("mid-game: shows the default heading and both totals", () => {
+    const { getByRole, getByTestId } = render(
       <ScoresModal
-        isGameOver={false}
+        outcome={null}
         totalWins={1}
         totalLosses={2}
         closeGameScoresModal={() => {}}
-      />
+      />,
     );
 
-    expect(getByText("Game Scores")).toBeInTheDocument();
-    expect(getByText("1")).toBeInTheDocument();
-    expect(getByText("2")).toBeInTheDocument();
+    expect(getByRole("dialog", { name: "Game Scores" })).toBeInTheDocument();
+    expect(getByTestId("total-wins")).toHaveTextContent("1");
+    expect(getByTestId("total-losses")).toHaveTextContent("2");
   });
 
-  test("shows 'Game Over! You won!' header when gameOutcome is WIN", () => {
-    const { getByText } = render(
+  test("shows 'Game Over! You won!' after a win", () => {
+    const { getByRole } = render(
       <ScoresModal
-        isGameOver={true}
-        gameOutcome="WIN"
+        outcome="WIN"
         totalWins={4}
         totalLosses={2}
         closeGameScoresModal={() => {}}
-      />
+      />,
     );
 
-    expect(getByText(/game over! you won!/i)).toBeInTheDocument();
+    expect(
+      getByRole("dialog", { name: "Game Over! You won!" }),
+    ).toBeInTheDocument();
   });
 
-  test("shows 'Game Over! You lost!' header when gameOutcome is LOSE", () => {
-    const { getByText } = render(
+  test("shows 'Game Over! You lost!' after a loss", () => {
+    const { getByRole } = render(
       <ScoresModal
-        isGameOver={true}
-        gameOutcome="LOSE"
+        outcome="LOSE"
         totalWins={4}
         totalLosses={5}
         closeGameScoresModal={() => {}}
-      />
+      />,
     );
 
-    expect(getByText(/game over! you lost!/i)).toBeInTheDocument();
+    expect(
+      getByRole("dialog", { name: "Game Over! You lost!" }),
+    ).toBeInTheDocument();
   });
 
   test("calls closeGameScoresModal when 'Continue' is clicked", () => {
     const closeHandler = vi.fn();
     const { getByText } = render(
       <ScoresModal
-        isGameOver={false}
+        outcome={null}
         totalWins={1}
         totalLosses={0}
         closeGameScoresModal={closeHandler}
-      />
+      />,
     );
 
     fireEvent.click(getByText("Continue"));
     expect(closeHandler).toHaveBeenCalledTimes(1);
   });
 
-  test("shows 'Game Over!' header without win/lose suffix when gameOutcome is undefined", () => {
-    const { getByText, queryByText } = render(
+  test("opens as a modal with focus on Continue", () => {
+    const { getByTestId } = render(
       <ScoresModal
-        isGameOver={true}
-        totalWins={4}
-        totalLosses={5}
+        outcome={null}
+        totalWins={0}
+        totalLosses={0}
         closeGameScoresModal={() => {}}
-      />
+      />,
     );
 
-    expect(getByText(/game over!/i)).toBeInTheDocument();
-    expect(queryByText(/you won!/i)).not.toBeInTheDocument();
-    expect(queryByText(/you lost!/i)).not.toBeInTheDocument();
+    expect(getByTestId("game-scores-modal")).toHaveAttribute("open");
+    expect(getByTestId("continue-button")).toHaveFocus();
   });
 });
