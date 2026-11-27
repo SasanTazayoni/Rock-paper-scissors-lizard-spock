@@ -10,7 +10,7 @@ I built this project in stages, starting with HTML and CSS to create the basic l
 
 This project is a two-player version of Rock Paper Scissors Lizard Spock, inspired by The Big Bang Theory. The player competes against an AI, with each round producing a clear outcome based on the game rules. Expanding the classic game with extra choices adds more variety and makes the gameplay a bit more strategic, while still keeping it simple and quick to play.
 
-You can play the game on the live site [here](https://sasantazayoni.github.io/Rock-paper-scissors-lizard-spock/).
+You can play the game on the live site [here](https://sasantazayoni.github.io/rock-paper-scissors-lizard-spock/).
 
 ![Rock paper scissors lizard spock game on various devices](documentation/responsiveness.png)
 

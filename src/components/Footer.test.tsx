@@ -15,7 +15,7 @@ describe("Footer", () => {
     const link = getByRole("link", { name: "Source code on GitHub" });
     expect(link).toHaveAttribute(
       "href",
-      "https://github.com/SasanTazayoni/Rock-paper-scissors-lizard-spock",
+      "https://github.com/SasanTazayoni/rock-paper-scissors-lizard-spock",
     );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));

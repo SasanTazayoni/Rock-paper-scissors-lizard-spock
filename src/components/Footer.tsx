@@ -1,5 +1,5 @@
 const REPO_URL =
-  "https://github.com/SasanTazayoni/Rock-paper-scissors-lizard-spock";
+  "https://github.com/SasanTazayoni/rock-paper-scissors-lizard-spock";
 
 // GitHub "mark-github" icon from Primer Octicons (MIT licence).
 const GITHUB_ICON_PATH =
