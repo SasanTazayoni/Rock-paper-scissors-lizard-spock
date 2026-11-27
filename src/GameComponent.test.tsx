@@ -156,6 +156,30 @@ describe("Game Over Behavior", () => {
       );
     });
   });
+
+  test("selections after game over are ignored and total wins update only once", () => {
+    vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
+    const updateSpy = vi
+      .spyOn(gameScores, "updateGameScores")
+      .mockImplementation(() => {});
+
+    const { getByRole, getByLabelText, queryByTestId } = render(
+      <GameComponent />,
+    );
+    const rockBtn = getByRole("button", { name: /Rock icon/i });
+
+    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+
+    // The Scores modal is open, but the selection buttons are still reachable
+    // by keyboard, so extra clicks must not count.
+    fireEvent.click(rockBtn);
+    fireEvent.click(rockBtn);
+
+    expect(getByLabelText("Player score").textContent).toBe("5");
+    expect(queryByTestId("player-result-5")).not.toBeInTheDocument();
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("Reset button", () => {

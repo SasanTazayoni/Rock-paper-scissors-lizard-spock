@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getComputerChoice } from "./utils/computerChoice";
 import { getPlayerChoice } from "./utils/playerChoice";
 import { playGameRound } from "./utils/gameLogic";
@@ -41,27 +41,27 @@ function GameComponent() {
 
   useOverlayHeight(isOverlayOpen);
 
-  useEffect(() => {
-    if (playerScore >= 5 || computerScore >= 5) {
-      if (playerScore >= 5) {
-        updateGameScores("WIN", setPlayerGameWins, setComputerGameWins);
-      } else {
-        updateGameScores("LOSE", setPlayerGameWins, setComputerGameWins);
-      }
-      setShowGameScoresModal(true);
-    }
-  }, [playerScore, computerScore]);
-
   const handleSelection = (selection: Selection) => {
+    if (isGameOver) return;
+
     const playerChoice = getPlayerChoice(selection);
     const computerChoice = getComputerChoice();
 
     const roundResult = playGameRound(selection, computerChoice);
 
-    if (roundResult === "WIN") {
-      setPlayerScore((prev) => prev + 1);
-    } else if (roundResult === "LOSE") {
-      setComputerScore((prev) => prev + 1);
+    const nextPlayerScore = playerScore + (roundResult === "WIN" ? 1 : 0);
+    const nextComputerScore = computerScore + (roundResult === "LOSE" ? 1 : 0);
+
+    setPlayerScore(nextPlayerScore);
+    setComputerScore(nextComputerScore);
+
+    if (nextPlayerScore >= 5 || nextComputerScore >= 5) {
+      updateGameScores(
+        nextPlayerScore >= 5 ? "WIN" : "LOSE",
+        setPlayerGameWins,
+        setComputerGameWins,
+      );
+      setShowGameScoresModal(true);
     }
 
     setHistory((prev) => [
