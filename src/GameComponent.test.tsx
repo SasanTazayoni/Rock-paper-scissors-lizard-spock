@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import GameComponent from "./GameComponent";
 import * as gameLogic from "./utils/gameLogic.ts";
 import * as scoreStorage from "./utils/scoreStorage";
+import * as computerChoice from "./utils/computerChoice";
+import { CHOICES } from "./utils/choices";
 import { STORAGE_KEY } from "./utils/scoreStorage";
 import { MENU, clickTimes } from "./test/helpers";
 
@@ -33,35 +35,20 @@ describe("GameComponent – initial render", () => {
     expect(getByLabelText(/^Scissors icon:/i)).toBeInTheDocument();
     expect(getByLabelText(/^Lizard icon:/i)).toBeInTheDocument();
     expect(getByLabelText(/^Spock icon:/i)).toBeInTheDocument();
-
-    expect(getByLabelText("Player label")).toBeInTheDocument();
-    expect(getByLabelText("Player score")).toHaveTextContent("0");
-    expect(getByLabelText("Computer label")).toBeInTheDocument();
-    expect(getByLabelText("Computer score")).toHaveTextContent("0");
   });
 
-  test("renders result columns showing player and computer scores", () => {
-    const { getByText } = render(<GameComponent />);
+  test("shows both sides' labels with scores of 0", () => {
+    render(<GameComponent />);
 
-    const playerLabel = getByText(/Player:/i);
-    expect(playerLabel).toBeInTheDocument();
+    expect(screen.getByText("Player:")).toBeInTheDocument();
+    expect(screen.getByTestId("player-score")).toHaveTextContent("0");
+    expect(screen.getByText("Computer:")).toBeInTheDocument();
+    expect(screen.getByTestId("computer-score")).toHaveTextContent("0");
+  });
 
-    const playerScore =
-      playerLabel.nextElementSibling ||
-      playerLabel.querySelector(".score") ||
-      (playerLabel.parentNode as Element).querySelector(".score");
-    expect(playerScore).toBeInTheDocument();
-    expect((playerScore as Element).textContent).toBe("0");
-
-    const computerLabel = getByText(/Computer:/i);
-    expect(computerLabel).toBeInTheDocument();
-
-    const computerScore =
-      computerLabel.nextElementSibling ||
-      computerLabel.querySelector(".score") ||
-      (computerLabel.parentNode as Element).querySelector(".score");
-    expect(computerScore).toBeInTheDocument();
-    expect((computerScore as Element).textContent).toBe("0");
+  test("the round announcement starts empty", () => {
+    render(<GameComponent />);
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 
   test("ScoresModal: should not be visible initially", () => {
@@ -75,9 +62,9 @@ describe("Score updates on selection", () => {
   test("clicking a selection button increases player score on a win", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
-    const { getByRole, getByLabelText } = render(<GameComponent />);
+    const { getByRole } = render(<GameComponent />);
 
-    const playerScore = getByLabelText("Player score");
+    const playerScore = screen.getByTestId("player-score");
     expect(playerScore.textContent).toBe("0");
 
     fireEvent.click(getByRole("button", { name: /Rock icon/i }));
@@ -88,9 +75,9 @@ describe("Score updates on selection", () => {
   test("clicking a selection button increases computer score on a loss", async () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
 
-    const { getByRole, getByLabelText } = render(<GameComponent />);
+    const { getByRole } = render(<GameComponent />);
 
-    const computerScore = getByLabelText("Computer score");
+    const computerScore = screen.getByTestId("computer-score");
     expect(computerScore.textContent).toBe("0");
 
     fireEvent.click(getByRole("button", { name: /Rock icon/i }));
@@ -99,20 +86,54 @@ describe("Score updates on selection", () => {
       expect(computerScore.textContent).toBe("1");
     });
   });
+
+  test("a draw adds a round to both columns but changes neither score", () => {
+    vi.spyOn(computerChoice, "getComputerChoice").mockReturnValue(CHOICES.rock);
+    render(<GameComponent />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Rock icon/i }));
+
+    expect(screen.getByTestId("player-score")).toHaveTextContent("0");
+    expect(screen.getByTestId("computer-score")).toHaveTextContent("0");
+    expect(screen.getByTestId("player-latest-result")).not.toHaveClass("winner");
+    expect(screen.getByTestId("computer-latest-result")).not.toHaveClass(
+      "winner",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Round 1: you chose Rock, the computer chose Rock. It's a draw. Score: you 0, computer 0.",
+    );
+  });
+
+  test("each round is announced to screen readers", () => {
+    vi.spyOn(computerChoice, "getComputerChoice").mockReturnValue(
+      CHOICES.scissors,
+    );
+    render(<GameComponent />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Rock icon/i }));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Round 1: you chose Rock, the computer chose Scissors. You win the round. Score: you 1, computer 0.",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Paper icon/i }));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Round 2: you chose Paper, the computer chose Scissors. The computer wins the round. Score: you 1, computer 1.",
+    );
+  });
 });
 
 describe("Game Over Behavior", () => {
   test("game ends when PLAYER reaches 5 points, ScoresModal opens, wins updated", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
-    const { getByRole, getByLabelText, getByTestId } = render(
+    const { getByRole, getByTestId } = render(
       <GameComponent />,
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
     clickTimes(rockBtn);
 
-    expect(getByLabelText("Player score").textContent).toBe("5");
+    expect(screen.getByTestId("player-score").textContent).toBe("5");
     expect(getByTestId("game-scores-modal")).toBeInTheDocument();
     expect(getByTestId("total-wins")).toHaveTextContent("1");
     expect(getByTestId("total-losses")).toHaveTextContent("0");
@@ -122,14 +143,14 @@ describe("Game Over Behavior", () => {
   test("game ends when COMPUTER reaches 5 points, ScoresModal opens, losses updated", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
 
-    const { getByRole, getByLabelText, getByTestId } = render(
+    const { getByRole, getByTestId } = render(
       <GameComponent />,
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
     clickTimes(rockBtn);
 
-    expect(getByLabelText("Computer score").textContent).toBe("5");
+    expect(screen.getByTestId("computer-score").textContent).toBe("5");
     expect(getByTestId("game-scores-modal")).toBeInTheDocument();
     expect(getByTestId("total-wins")).toHaveTextContent("0");
     expect(getByTestId("total-losses")).toHaveTextContent("1");
@@ -140,7 +161,7 @@ describe("Game Over Behavior", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
     const saveSpy = vi.spyOn(scoreStorage, "saveTotals");
 
-    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+    const { getByRole, getByTestId, queryByTestId } = render(
       <GameComponent />,
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
@@ -153,7 +174,7 @@ describe("Game Over Behavior", () => {
     fireEvent.click(rockBtn);
     fireEvent.click(rockBtn);
 
-    expect(getByLabelText("Player score").textContent).toBe("5");
+    expect(screen.getByTestId("player-score").textContent).toBe("5");
     expect(queryByTestId("player-result-5")).not.toBeInTheDocument();
     expect(getByTestId("total-wins")).toHaveTextContent("1");
     expect(saveSpy).toHaveBeenCalledTimes(1);
@@ -206,21 +227,21 @@ describe("Reset button", () => {
   test("clicking Reset zeroes scores and clears history", async () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
-    const { getByLabelText, getByRole, queryByTestId } = render(
+    const { getByRole, queryByTestId } = render(
       <GameComponent />,
     );
 
     fireEvent.click(getByRole("button", { name: /Rock icon/i }));
 
     await waitFor(() => {
-      expect(getByLabelText("Player score").textContent).toBe("1");
+      expect(screen.getByTestId("player-score").textContent).toBe("1");
     });
 
     fireEvent.click(screen.getByRole("button", { name: MENU.reset }));
 
     await waitFor(() => {
-      expect(getByLabelText("Player score").textContent).toBe("0");
-      expect(getByLabelText("Computer score").textContent).toBe("0");
+      expect(screen.getByTestId("player-score").textContent).toBe("0");
+      expect(screen.getByTestId("computer-score").textContent).toBe("0");
       expect(queryByTestId("player-latest-result")).toBeNull();
       expect(queryByTestId("computer-latest-result")).toBeNull();
     });
@@ -276,7 +297,7 @@ describe("Rules Modal Close Behavior", () => {
 
 describe("ScoresModal close behavior", () => {
   test("clicking Continue closes ScoresModal and resets game on WIN", async () => {
-    const { getByRole, queryByTestId, getByLabelText, getByTestId } = render(
+    const { getByRole, queryByTestId, getByTestId } = render(
       <GameComponent />,
     );
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
@@ -286,21 +307,21 @@ describe("ScoresModal close behavior", () => {
 
     await waitFor(() => {
       expect(queryByTestId("game-scores-modal")).toBeInTheDocument();
-      expect(getByLabelText("Player score").textContent).toBe("5");
+      expect(screen.getByTestId("player-score").textContent).toBe("5");
     });
 
     fireEvent.click(getByTestId("continue-button"));
 
     await waitFor(() => {
       expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
-      expect(getByLabelText("Player score").textContent).toBe("0");
-      expect(getByLabelText("Computer score").textContent).toBe("0");
+      expect(screen.getByTestId("player-score").textContent).toBe("0");
+      expect(screen.getByTestId("computer-score").textContent).toBe("0");
     });
   });
 
   test("pressing Escape after game over also resets the game", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
-    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+    const { getByRole, getByTestId, queryByTestId } = render(
       <GameComponent />,
     );
 
@@ -311,12 +332,12 @@ describe("ScoresModal close behavior", () => {
     pressEscape(getByTestId("game-scores-modal"));
 
     expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
-    expect(getByLabelText("Computer score").textContent).toBe("0");
+    expect(screen.getByTestId("computer-score").textContent).toBe("0");
   });
 
   test("opening scores mid-game and pressing Continue keeps the current game", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
-    const { getByRole, getByLabelText, getByTestId, queryByTestId } = render(
+    const { getByRole, getByTestId, queryByTestId } = render(
       <GameComponent />,
     );
 
@@ -330,7 +351,7 @@ describe("ScoresModal close behavior", () => {
     fireEvent.click(getByTestId("continue-button"));
 
     expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
-    expect(getByLabelText("Player score").textContent).toBe("2");
+    expect(screen.getByTestId("player-score").textContent).toBe("2");
     expect(queryByTestId("player-result-1")).toBeInTheDocument();
   });
 });

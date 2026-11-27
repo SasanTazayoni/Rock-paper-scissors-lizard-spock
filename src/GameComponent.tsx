@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getComputerChoice } from "./utils/computerChoice";
-import { getGameOutcome, playGameRound } from "./utils/gameLogic";
-import { CHOICES, type Selection } from "./utils/choices";
+import { getGameOutcome, playGameRound, type Round } from "./utils/gameLogic";
+import type { Selection } from "./utils/choices";
+import { describeRound } from "./utils/describeRound";
 import { useGameTotals } from "./hooks/useGameTotals";
 import RulesModal from "./components/RulesModal";
 import ScoresModal from "./components/ScoresModal";
@@ -10,31 +11,23 @@ import NavigationButtons from "./components/NavigationButtons";
 import SelectionButtons from "./components/SelectionButtons";
 import Footer from "./components/Footer";
 
-export type Result = {
-  symbol: string;
-  isWinner: boolean;
-};
-
-type RoundResult = {
-  player: Result;
-  computer: Result;
-};
-
-function GameComponent() {
+export default function GameComponent() {
   const { totalWins, totalLosses, recordGame, resetTotals } = useGameTotals();
 
   const [playerScore, setPlayerScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
   const [showRulesModal, setShowRulesModal] = useState(true);
   const [showGameScoresModal, setShowGameScoresModal] = useState(false);
-  const [history, setHistory] = useState<RoundResult[]>([]);
+  /** Rounds played this game, latest first. */
+  const [history, setHistory] = useState<Round[]>([]);
+  const nextRoundId = useRef(0);
   const gameOutcome = getGameOutcome(playerScore, computerScore);
   const isGameOver = gameOutcome !== null;
+  const latestRound = history[0];
 
   const handleSelection = (selection: Selection) => {
     if (isGameOver) return;
 
-    const playerChoice = CHOICES[selection];
     const computerChoice = getComputerChoice();
 
     const roundResult = playGameRound(selection, computerChoice.name);
@@ -51,19 +44,13 @@ function GameComponent() {
       setShowGameScoresModal(true);
     }
 
-    setHistory((prev) => [
-      {
-        player: {
-          symbol: playerChoice.symbol,
-          isWinner: roundResult === "WIN",
-        },
-        computer: {
-          symbol: computerChoice.symbol,
-          isWinner: roundResult === "LOSE",
-        },
-      },
-      ...prev,
-    ]);
+    const round: Round = {
+      id: nextRoundId.current++,
+      player: selection,
+      computer: computerChoice.name,
+      outcome: roundResult,
+    };
+    setHistory((prev) => [round, ...prev]);
   };
 
   const resetGame = () => {
@@ -102,19 +89,21 @@ function GameComponent() {
         </section>
 
         <section className="scores">
-          <ResultColumn
-            label="Player"
-            score={playerScore}
-            results={history.map((round) => round.player)}
-          />
-
-          <ResultColumn
-            label="Computer"
-            score={computerScore}
-            results={history.map((round) => round.computer)}
-            extraClass="loss"
-          />
+          <ResultColumn side="player" score={playerScore} rounds={history} />
+          <ResultColumn side="computer" score={computerScore} rounds={history} />
         </section>
+
+        {/* Announces each round to screen readers. Always rendered, so
+            assistive tech is already watching it when the text changes. */}
+        <p className="visually-hidden" role="status" data-testid="round-status">
+          {latestRound &&
+            describeRound(
+              latestRound,
+              history.length,
+              playerScore,
+              computerScore,
+            )}
+        </p>
 
         <RulesModal
           showRulesModal={showRulesModal}
@@ -134,5 +123,3 @@ function GameComponent() {
     </>
   );
 }
-
-export default GameComponent;

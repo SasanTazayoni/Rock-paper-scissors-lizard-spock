@@ -9,6 +9,20 @@ export type RoundOutcome = "WIN" | "LOSE" | "DRAW";
 /** The result of a finished game, from the player's point of view. */
 export type GameOutcome = Exclude<RoundOutcome, "DRAW">;
 
+export type Side = "player" | "computer";
+
+/** One played round. `id` is stable, so React can key the history by it. */
+export type Round = {
+  id: number;
+  player: Selection;
+  computer: Selection;
+  outcome: RoundOutcome;
+};
+
+/** Whether `side` won `round`. */
+export const isRoundWinner = (round: Round, side: Side) =>
+  round.outcome === (side === "player" ? "WIN" : "LOSE");
+
 export const playGameRound = (
   player: Selection,
   computer: Selection,
