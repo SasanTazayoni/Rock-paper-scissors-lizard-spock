@@ -1,18 +1,13 @@
 import { render } from "@testing-library/react";
-import { describe, test, expect, vi } from "vitest";
+import { describe, test, expect } from "vitest";
 import Footer from "./Footer";
 
 describe("Footer", () => {
-  test("shows the current year in the copyright text", () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2031-06-15"));
-
+  test("renders the copyright text", () => {
     const { getByText } = render(<Footer />);
     expect(
-      getByText(/rock paper scissors lizard spock game 2031/i),
+      getByText("© Rock Paper Scissors Lizard Spock 2025"),
     ).toBeInTheDocument();
-
-    vi.useRealTimers();
   });
 
   test("contains a link to the GitHub repository", () => {
