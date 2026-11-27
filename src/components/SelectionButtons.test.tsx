@@ -1,7 +1,7 @@
 import { render, fireEvent } from "@testing-library/react";
 import { describe, test, vi, expect } from "vitest";
 import SelectionButtons from "./SelectionButtons";
-import type { Selection } from "../utils/rules";
+import type { Selection } from "../utils/choices";
 
 describe("SelectionButtons", () => {
   test("renders all selection buttons with correct aria-labels", () => {

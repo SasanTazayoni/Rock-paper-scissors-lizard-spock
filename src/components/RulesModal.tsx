@@ -1,4 +1,6 @@
 import Modal from "./Modal";
+import { CHOICES, SELECTIONS, losesTo } from "../utils/choices";
+import { WINNING_SCORE } from "../utils/gameLogic";
 
 type RulesModalProps = {
   showRulesModal: boolean;
@@ -21,38 +23,31 @@ export default function RulesModal({
       <h2 id="rules-modal-title">How it works (rules)</h2>
       <div className="rules">
         <ul className="rules-list">
-          <li>
-            <span className="icon">✊</span>
-            Rock beats scissors and lizard but loses to paper and spock.
-          </li>
-          <li>
-            <span className="icon">🖐</span>
-            Paper beats rock and spock but loses to scissors and lizard.
-          </li>
-          <li>
-            <span className="icon">✌️</span>
-            Scissors beats paper and lizard but loses to spock and rock.
-          </li>
-          <li>
-            <span className="icon">🤏</span>
-            Lizard beats spock and paper but loses to rock and scissors.
-          </li>
-          <li>
-            <span className="icon">🖖</span>
-            Spock beats rock and scissors but loses to paper and lizard.
-          </li>
+          {SELECTIONS.map((selection) => {
+            const { label, symbol, beats } = CHOICES[selection];
+            const [first, second] = losesTo(selection);
+            return (
+              <li key={selection}>
+                <span className="icon" aria-hidden="true">
+                  {symbol}
+                </span>
+                {label} beats {beats[0]} and {beats[1]} but loses to {first}{" "}
+                and {second}.
+              </li>
+            );
+          })}
         </ul>
         <img
           src={`${import.meta.env.BASE_URL}images/rules.png`}
           className="modal-image"
-          alt="Rock-paper-lizard-Spock game rules diagram"
+          alt="Diagram of the Rock Paper Scissors Lizard Spock rules"
           onError={(e) => {
             e.currentTarget.style.display = "none";
           }}
         />
       </div>
       <div className="rules-text">
-        <p>The winner of a game is the first to win 5 rounds.</p>
+        <p>The winner of a game is the first to win {WINNING_SCORE} rounds.</p>
       </div>
       <button className="btn" onClick={closeRulesModal}>
         Play game

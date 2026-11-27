@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { getComputerChoice } from "./utils/computerChoice";
-import { getPlayerChoice } from "./utils/playerChoice";
-import { playGameRound } from "./utils/gameLogic";
-import { Selection } from "./utils/rules";
+import { getGameOutcome, playGameRound } from "./utils/gameLogic";
+import { CHOICES, type Selection } from "./utils/choices";
 import { useGameTotals } from "./hooks/useGameTotals";
 import RulesModal from "./components/RulesModal";
 import ScoresModal from "./components/ScoresModal";
@@ -29,15 +28,16 @@ function GameComponent() {
   const [showRulesModal, setShowRulesModal] = useState(true);
   const [showGameScoresModal, setShowGameScoresModal] = useState(false);
   const [history, setHistory] = useState<RoundResult[]>([]);
-  const isGameOver = playerScore >= 5 || computerScore >= 5;
+  const gameOutcome = getGameOutcome(playerScore, computerScore);
+  const isGameOver = gameOutcome !== null;
 
   const handleSelection = (selection: Selection) => {
     if (isGameOver) return;
 
-    const playerChoice = getPlayerChoice(selection);
+    const playerChoice = CHOICES[selection];
     const computerChoice = getComputerChoice();
 
-    const roundResult = playGameRound(selection, computerChoice);
+    const roundResult = playGameRound(selection, computerChoice.name);
 
     const nextPlayerScore = playerScore + (roundResult === "WIN" ? 1 : 0);
     const nextComputerScore = computerScore + (roundResult === "LOSE" ? 1 : 0);
@@ -45,8 +45,9 @@ function GameComponent() {
     setPlayerScore(nextPlayerScore);
     setComputerScore(nextComputerScore);
 
-    if (nextPlayerScore >= 5 || nextComputerScore >= 5) {
-      recordGame(nextPlayerScore >= 5 ? "WIN" : "LOSE");
+    const nextGameOutcome = getGameOutcome(nextPlayerScore, nextComputerScore);
+    if (nextGameOutcome) {
+      recordGame(nextGameOutcome);
       setShowGameScoresModal(true);
     }
 
@@ -124,9 +125,7 @@ function GameComponent() {
 
         {showGameScoresModal && (
           <ScoresModal
-            outcome={
-              isGameOver ? (playerScore > computerScore ? "WIN" : "LOSE") : null
-            }
+            outcome={gameOutcome}
             totalWins={totalWins}
             totalLosses={totalLosses}
             closeGameScoresModal={closeGameScoresModal}

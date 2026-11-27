@@ -1,5 +1,5 @@
 import Modal from "./Modal";
-import type { GameOutcome } from "../hooks/useGameTotals";
+import type { GameOutcome } from "../utils/gameLogic";
 
 type ScoresModalProps = {
   /** The result of the game that just ended, or null when opened mid-game. */

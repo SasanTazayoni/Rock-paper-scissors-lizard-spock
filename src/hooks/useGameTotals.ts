@@ -5,8 +5,7 @@ import {
   saveTotals,
   type GameTotals,
 } from "../utils/scoreStorage";
-
-export type GameOutcome = "WIN" | "LOSE";
+import type { GameOutcome } from "../utils/gameLogic";
 
 export function useGameTotals() {
   // Lazy initialiser: read storage once on first render, no effect needed.

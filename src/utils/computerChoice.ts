@@ -1,8 +1,8 @@
-import { rules } from "./rules";
+import { CHOICES, SELECTIONS, type Choice } from "./choices";
 
-export const getComputerChoice = () => {
-  const randomIndex = Math.floor(Math.random() * rules.length);
-  const choice = rules[randomIndex];
-  if (!choice) throw new Error(`No rule at index ${randomIndex}`);
-  return choice;
+export const getComputerChoice = (): Choice => {
+  const randomIndex = Math.floor(Math.random() * SELECTIONS.length);
+  const selection = SELECTIONS[randomIndex];
+  if (!selection) throw new Error(`No choice at index ${randomIndex}`);
+  return CHOICES[selection];
 };
