@@ -19,8 +19,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx",
     "types": ["@testing-library/jest-dom/vitest"]
   },
-  "include": ["src"]
+  "include": ["src", "setupTests.ts", "vite.config.ts"]
 }

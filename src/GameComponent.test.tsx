@@ -80,13 +80,12 @@ describe("Score updates on selection", () => {
   test("clicking a selection button increases player score on a win", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
-    const { getAllByRole, getByLabelText } = render(<GameComponent />);
-    const selectionButtons = getAllByRole("button", { name: /icon/i });
+    const { getByRole, getByLabelText } = render(<GameComponent />);
 
     const playerScore = getByLabelText("Player score");
     expect(playerScore.textContent).toBe("0");
 
-    fireEvent.click(selectionButtons[0]);
+    fireEvent.click(getByRole("button", { name: /Rock icon/i }));
 
     expect(playerScore.textContent).toBe("1");
   });
@@ -94,13 +93,12 @@ describe("Score updates on selection", () => {
   test("clicking a selection button increases computer score on a loss", async () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("LOSE");
 
-    const { getAllByRole, getByLabelText } = render(<GameComponent />);
-    const buttons = getAllByRole("button", { name: /icon/i });
+    const { getByRole, getByLabelText } = render(<GameComponent />);
 
     const computerScore = getByLabelText("Computer score");
     expect(computerScore.textContent).toBe("0");
 
-    fireEvent.click(buttons[0]);
+    fireEvent.click(getByRole("button", { name: /Rock icon/i }));
 
     await waitFor(() => {
       expect(computerScore.textContent).toBe("1");
