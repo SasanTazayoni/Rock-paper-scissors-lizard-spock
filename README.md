@@ -4,7 +4,7 @@
 
 Introducing an enriched iteration of the classic 'Rock Paper Scissors' game, this version introduces two additional variables, elevating the decision-making process to new heights. Players make their selections simultaneously, infusing an element of suspense into each move. While this version is versatile enough for multiple players, this particular application is designed for a captivating two-player interaction. It pits the user against the computer, offering a game tailored for enthusiasts who appreciate pop culture references and delight in playful, social games. Triumph is attained by strategically outsmarting the computer's selections and selecting the icon that counters its choice. In the event of a tied match, a rematch ensues, persisting until a decisive victor emerges.
 
-This tailored application revolves around a user-computer dynamic, providing an experience that appeals to a wide range of age groups, from teenagers to adults who are familiar with the show and its references. It features a sequence of 9 rounds per game, offering an engaging twist on the traditional gameplay. To clinch an overall victory, players must achieve 5 wins within these rounds to win a game. Round scores are prominently displayed below the array of game icons, ensuring a clear view of the ongoing battle. Initiating gameplay is effortless: a simple click on the "Play game" button followed by a game icon (✊, 🖐, ✌️, 🤏, 🖖) in the main user interface and the computer will counter with its own randomized choice, culminating in an entertaining clash of wits!
+This tailored application revolves around a user-computer dynamic, providing an experience that appeals to a wide range of age groups, from teenagers to adults who are familiar with the show and its references. A game is won by the first side to win 5 rounds. Drawn rounds don't count towards either score, so a game lasts as many rounds as it takes. Round scores are prominently displayed below the array of game icons, ensuring a clear view of the ongoing battle. Initiating gameplay is effortless: a simple click on the "Play game" button followed by a game icon (✊, 🖐, ✌️, 🤏, 🖖) in the main user interface and the computer will counter with its own randomized choice, culminating in an entertaining clash of wits!
 
 I built this project in stages, starting with HTML and CSS to create the basic layout. I then added JavaScript to handle user interactions and game logic. As the project grew, I introduced TypeScript to improve code reliability and make it easier to maintain. I also switched to Vite for a faster development workflow. Finally, I rebuilt the app using React, which allowed me to break the UI into reusable components and manage state more effectively.
 
@@ -25,11 +25,13 @@ You can play the game on the live site [here](https://sasantazayoni.github.io/ro
   - [Wireframes](#wireframes)
 - [Features](#features)
   - [Current features](#current-features)
+  - [Accessibility](#accessibility)
   - [Future features](#future-features)
 - [Technologies used](#technologies-used)
-  - [Languages used](#languages-used)
+  - [Languages & tools used](#languages--tools-used)
   - [Frameworks, libraries and programs used](#frameworks-libraries-and-programs-used)
 - [Testing](#testing)
+  - [Automated tests](#automated-tests)
   - [Validator testing](#validator-testing)
   - [Testing User Stories from (UX) section](#testing-user-stories-from-ux-section)
   - [Personal testing](#personal-testing)
@@ -37,6 +39,7 @@ You can play the game on the live site [here](https://sasantazayoni.github.io/ro
   - [PowerMapper Compatibility](#powermapper-compatibility)
   - [Bugs](#bugs)
 - [Deployment](#deployment)
+  - [Running locally](#running-locally)
 - [Credits](#credits)
 
 ## User Experience
@@ -107,19 +110,19 @@ The main game UI with an open modal: <br>
   ![The close-rules button with hover](documentation/closerulesbtnhover.jpg)
   ![The close-scores button with hover](documentation/closescoresbtnhover.jpg)
 
-- The reset button has an additional pulse effect when clicked for clarity to indicate that the button has reset the game scores: <br>
+- The reset button has an additional ripple effect that spreads out from where it is clicked, to make it clear that the game has been reset: <br>
 
-  ![The reset button oulse effect](documentation/resetbtnpulse.jpg)
+  ![The reset button ripple effect](documentation/resetbtnpulse.jpg)
 
 - Clicking on the "See rules" button opens the rules modal (can be done at any time): <br>
 
   ![The rules modal](documentation/rulesmodal.jpg)
 
-- Clicking on the "Wins & Losses" button opens the game scores modal (can be done at any time): <br>
+- Clicking on the "Wins & losses" button opens the game scores modal (can be done at any time): <br>
 
   ![The game scores modal](documentation/scoresmodal.jpg)
 
-- Modals can be closed by clicking on the button corresponding to the modal, by clicking on the overlay or by pressing Escape. While a modal is open, the rest of the page can't be used, and keyboard focus moves into the modal and returns to where it was when the modal closes.
+- Modals can be closed by clicking on the button corresponding to the modal, by clicking on the dimmed background around it or by pressing Escape. While a modal is open, the rest of the page can't be used.
 - The game icons have a hover effect on them indicating that they can be interacted with: <br>
 
   ![The game icons](documentation/icons.jpg)
@@ -139,12 +142,21 @@ The main game UI with an open modal: <br>
 
   ![Multiple rounds played](documentation/multiround.jpg)
 
-- The game ends when either the player or the computer has 5 round wins. This increments the game scores in the scores modal and is stored in local storage in case the player closes their browser. Text is dynamically inserted into the scores modal depending on whether the player has won or lost the game and then removed when the modal is closed:
+- The game ends when either the player or the computer has 5 round wins. This increments the game scores in the scores modal and is stored in local storage in case the player closes their browser. If the browser blocks local storage, the totals still count for the current visit. Text is dynamically inserted into the scores modal depending on whether the player has won or lost the game and then removed when the modal is closed:
 
   ![End of game text](documentation/dynamictext.jpg)
 
 - When the modal is closed after a game end, the round scores reset to 0 for both the player and the computer and all added icons are removed from the page (the game is reset).
-- The game scores (but not round scores) can be reset using the reset button in the main UI.
+- The reset button in the main UI resets everything: the current game (round scores and the icons from previous rounds) and the overall wins and losses.
+
+### Accessibility
+
+- The modals are native dialogs. While one is open, the page behind it can't be used, Escape closes it, and keyboard focus moves into it and returns to where it was when it closes.
+- Each round's result is announced to screen readers, for example "Round 2: you chose Paper, the computer chose Scissors. The computer wins the round. Score: you 1, computer 1."
+- The icons in the round history have spoken names, such as "Rock, won the round", instead of being read out as emoji.
+- The game icons show a clear outline when they are reached with the keyboard.
+- Text and score colours meet the WCAG AA contrast ratio of at least 4.5:1.
+- Every button's accessible name matches its visible text, so voice-control users can say what they see.
 
 ### Future features
 
@@ -160,20 +172,22 @@ The main game UI with an open modal: <br>
 - TypeScript
 - React
 - Vite
-- Vitest (unit testing)
+- Vitest, React Testing Library and jsdom (automated tests)
+- ESLint (code linting)
 
 ### Frameworks, libraries and programs used
 
-- [Font Awesome](https://fontawesome.com/) used for github icon.
+- [Primer Octicons](https://primer.style/octicons/) used for the GitHub icon (MIT licence).
 - [Coolors](https://coolors.co/) used to display colour palette used on the website.
 - [Google Fonts](https://fonts.google.com/) used to import 'Exo 2' font.
 - [Github](https://github.com/) used to host repository.
-- [Github pages](https://pages.github.com/) used to deploy the application.
+- [Github pages](https://pages.github.com/) used to host the application.
+- [GitHub Actions](https://github.com/features/actions) used to test, build and deploy the application.
 - [Gitpod](https://www.gitpod.io/) used to develop project and organise version control.
 - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) used for performance review.
 - [Caniuse](https://caniuse.com/) used to check compatibility of code syntax with other browsers.
 - [PowerMapper](https://www.powermapper.com/) used to check compatibility of website with other browsers.
-- [Amiresposive](https://amiresponsive.co.uk/) used to display website on the most common devices.
+- [Am I Responsive](https://amiresponsive.co.uk/) used to display website on the most common devices.
 - [StackOverflow](https://stackoverflow.com/) used to problem solve and deal with queries.
 - [Getemoji](https://getemoji.com/) used to obtain game icons.
 - [Seekpng](https://www.seekpng.com/) used to obtain rules modal image.
@@ -181,13 +195,26 @@ The main game UI with an open modal: <br>
 
 ## Testing
 
+### Automated tests
+
+The game has a suite of automated tests written with [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/), running in a simulated browser ([jsdom](https://github.com/jsdom/jsdom)). They cover:
+
+- all 25 matchups of the game rules, checked against an independently written list of the 10 winning pairs
+- scoring, game over at 5 wins, and ignoring clicks once a game is over
+- saving and loading total wins and losses, including corrupted data and browsers that block storage
+- the modals: opening, closing with the buttons, the background or Escape, and where keyboard focus goes
+- the screen-reader announcements and the round history
+
+Run them with `npm test` (see [Running locally](#running-locally)). They also run automatically before every deployment, so a failing test stops a broken version from going live.
+
 ### Validator testing
 
 I used the following websites to check my code for syntax errors:
 
 - [HTML validator](https://validator.w3.org/)
 - [CSS validator](https://jigsaw.w3.org/css-validator/)
-- [JavaScript validator](https://jshint.com/)
+
+The TypeScript code is checked by the TypeScript compiler and by [ESLint](https://eslint.org/) (`npm run lint`), which also run before every deployment.
 
 ### Testing User Stories from (UX) section
 
@@ -199,14 +226,14 @@ I used the following websites to check my code for syntax errors:
 
 - As a user, I want to play the game as soon as possible.
   - The "play game" button (see previous screenshot) is clearly visible within the rules modal and on clicking gives access to the main game UI.
-  - Alternatively the overlay can be clicked to close the modal and access the main game UI. <br>
+  - Alternatively, clicking the dimmed background or pressing Escape closes the modal and gives access to the main game UI. <br>
 - As a user, I want a clear indication of my current score and to know my round result each time I play a round.
   - The scores are clearly indicated in the main UI: <br>
 
     ![The round scores](documentation/roundresult.jpg) <br>
 
 - As a user, I want to be able to keep a record of and track how many games I have won or lost overall.
-  - Clicking the "Wins & Losses" button in the main UI will display the game scores modal: <br>
+  - Clicking the "Wins & losses" button in the main UI will display the game scores modal: <br>
 
     ![The game scores modal](documentation/scoresmodal.jpg) <br>
 
@@ -247,7 +274,7 @@ I used the following websites to check my code for syntax errors:
 
 ### Lighthouse testing
 
-Lighthouse was a helpful tool for checking where where the website was experiencing the most issues.
+Lighthouse was a helpful tool for checking where the website was experiencing the most issues.
 
 ![Lighthouse performance test](documentation/lighthouse.jpg)
 
@@ -261,19 +288,39 @@ As the results show, the application is highly compatible across all browsers.
 
 ### Bugs
 
-- On a horizontal mobile view with specific phones, it is possible that the rules modal will not allow scrolling throughout the entire height of the modal (i.e. it may be possible that the title of the rules modal and the "Play game" button are inaccessible). This problem has been adjusted to work on most mobiles but not every mobile was available for testing. With the tested devices, this problem has been fixed by adding "max-height: 100vh;" and "overflow-y: auto;" to the rules modal class selector in its open state within the CSS (".rules-modal.open"). <br> --> As of the 31st of August, this problem is now completely solved and should work on any device.
+- On a horizontal mobile view with specific phones, it is possible that the rules modal will not allow scrolling throughout the entire height of the modal (i.e. it may be possible that the title of the rules modal and the "Play game" button are inaccessible). This has been fixed by limiting the height of the rules modal ("max-height: 80vh;", or "70vh" on smaller screens) and letting it scroll ("overflow-y: auto;") in the ".rules-modal" CSS rule. The modal also opens scrolled to the top, so its title is always visible first.
 - Emojis on iPhones exhibit varying formatting and can occupy a relatively larger width, particularly noticeable on smaller iPhone models with narrower viewport widths. Consequently, on these devices, emojis positioned at the extremities might experience partial cropping due to the spacing between them. Moving forward, I intend to exercise greater prudence when incorporating emojis in my future applications, taking into consideration these potential formatting and spacing issues.
 
 ## Deployment
 
-1. Log into [GitHub](https://github.com/).
-2. Locate the repository for this project.
-3. Locate the settings option along the options bar at the top of the page.
-4. Locate the 'Pages' option on the left side bar and click on it.
-5. Under the 'Branch' subheading there should be a drop-down menu - select 'main' from the branch options.
-6. Click the save button.
-7. Github pages will build your website with the code supplied and begin hosting it when it is completed - the process usually takes a few minutes.
-8. The website URL will now be visible on the green bar under the section header. This will remain there permanently and you can refer back to it at any time.
+The site is deployed to GitHub Pages by a GitHub Actions workflow ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). On every push to the `main` branch it:
+
+1. installs the dependencies with `npm ci`
+2. runs ESLint and the automated tests
+3. builds the site with Vite into the `dist/` folder
+4. publishes `dist/` to GitHub Pages
+
+If linting or any test fails, nothing is deployed and the live site stays as it was.
+
+To deploy your own copy:
+
+1. Fork or copy the repository on [GitHub](https://github.com/).
+2. In the repository, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. If your repository has a different name, change `base` in [vite.config.ts](vite.config.ts) to `/<your-repository-name>/`, and update the site address in [index.html](index.html) and [public/sitemap.xml](public/sitemap.xml).
+4. Push to `main`. The workflow's progress is shown in the **Actions** tab, and the site address appears in **Settings → Pages** once it has finished.
+
+### Running locally
+
+You need [Node.js](https://nodejs.org/) 22.13 or later.
+
+```bash
+npm install       # install dependencies
+npm run dev       # start the development server
+npm test          # run the tests (re-runs on file changes)
+npm run lint      # check the code with ESLint
+npm run build     # type-check and build the site into dist/
+npm run preview   # serve the built site locally
+```
 
 ## Credits
 
