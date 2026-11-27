@@ -4,7 +4,7 @@
 // (privacy settings, some embedded views) throw on access, and an uncaught
 // throw during render would blank the whole page.
 
-const STORAGE_KEY = "gameScores";
+export const STORAGE_KEY = "gameScores";
 
 export type GameTotals = {
   wins: number;

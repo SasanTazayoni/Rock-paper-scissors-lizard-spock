@@ -85,14 +85,12 @@ function GameComponent() {
 
   return (
     <>
-      <nav className="btns">
-        <NavigationButtons
-          resetGame={resetGame}
-          resetTotals={resetTotals}
-          openRulesModal={openRulesModal}
-          openGameScoresModal={() => setShowGameScoresModal(true)}
-        />
-      </nav>
+      <NavigationButtons
+        resetGame={resetGame}
+        resetTotals={resetTotals}
+        openRulesModal={openRulesModal}
+        openGameScoresModal={() => setShowGameScoresModal(true)}
+      />
 
       <header>
         <h1>Rock Paper Scissors Lizard Spock game</h1>
@@ -132,7 +130,7 @@ function GameComponent() {
           />
         )}
       </main>
-      <Footer></Footer>
+      <Footer />
     </>
   );
 }

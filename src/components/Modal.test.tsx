@@ -27,9 +27,10 @@ describe("Modal", () => {
     expect(getByRole("dialog", { name: "Test title" })).toBe(dialog);
   });
 
-  test("moves focus inside when opened", () => {
-    const { getByRole } = renderModal();
-    expect(getByRole("button", { name: "OK" })).toHaveFocus();
+  test("focuses the dialog itself when opened, scrolled to the top", () => {
+    const { dialog } = renderModal();
+    expect(dialog).toHaveFocus();
+    expect(dialog.scrollTop).toBe(0);
   });
 
   test("returns focus to the previously focused element when unmounted", () => {

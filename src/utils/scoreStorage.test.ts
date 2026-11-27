@@ -1,8 +1,17 @@
 import { describe, test, expect, vi } from "vitest";
-import { clearTotals, loadTotals, saveTotals } from "./scoreStorage";
+import {
+  STORAGE_KEY,
+  clearTotals,
+  loadTotals,
+  saveTotals,
+} from "./scoreStorage";
 
 const store = (value: unknown) =>
-  localStorage.setItem("gameScores", JSON.stringify(value));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+
+test('the storage key stays "gameScores" so saved totals survive updates', () => {
+  expect(STORAGE_KEY).toBe("gameScores");
+});
 
 describe("loadTotals", () => {
   test("reads saved wins and losses", () => {
@@ -35,16 +44,16 @@ describe("loadTotals", () => {
     ["a JSON number", "42"],
     ["JSON null", "null"],
   ])("clears %s and returns zeros", (_label, raw) => {
-    localStorage.setItem("gameScores", raw);
+    localStorage.setItem(STORAGE_KEY, raw);
     expect(loadTotals()).toEqual({ wins: 0, losses: 0 });
-    expect(localStorage.getItem("gameScores")).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
 
 describe("saveTotals and clearTotals", () => {
   test("saves in the { player, computer } format older versions used", () => {
     saveTotals({ wins: 5, losses: 2 });
-    expect(JSON.parse(localStorage.getItem("gameScores")!)).toEqual({
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual({
       player: 5,
       computer: 2,
     });
@@ -58,7 +67,7 @@ describe("saveTotals and clearTotals", () => {
   test("clearTotals removes the saved totals", () => {
     saveTotals({ wins: 1, losses: 1 });
     clearTotals();
-    expect(localStorage.getItem("gameScores")).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
 
@@ -83,7 +92,7 @@ describe("when storage is blocked", () => {
   });
 
   test("corrupt data is still handled if removeItem throws", () => {
-    localStorage.setItem("gameScores", "not-valid-json");
+    localStorage.setItem(STORAGE_KEY, "not-valid-json");
     vi.spyOn(Storage.prototype, "removeItem").mockImplementation(blocked);
     expect(loadTotals()).toEqual({ wins: 0, losses: 0 });
   });

@@ -1,80 +1,88 @@
 import { render, fireEvent } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import NavigationButtons from "./NavigationButtons";
+import { MENU } from "../test/helpers";
+
+const renderButtons = (props: Partial<Parameters<typeof NavigationButtons>[0]> = {}) =>
+  render(
+    <NavigationButtons
+      resetGame={() => {}}
+      resetTotals={() => {}}
+      openRulesModal={() => {}}
+      openGameScoresModal={() => {}}
+      {...props}
+    />,
+  );
 
 describe("NavigationButtons component", () => {
-  test("renders all buttons with correct aria-labels", () => {
-    const { getByRole } = render(
-      <NavigationButtons
-        resetGame={() => {}}
-        resetTotals={() => {}}
-        openRulesModal={() => {}}
-        openGameScoresModal={() => {}}
-      />,
-    );
+  test("each button's accessible name is its visible text", () => {
+    const { getByRole } = renderButtons();
 
-    expect(getByRole("button", { name: /reset button/i })).toBeInTheDocument();
-    expect(
-      getByRole("button", { name: /see rules button/i }),
-    ).toBeInTheDocument();
-    expect(
-      getByRole("button", { name: /game scores button/i }),
-    ).toBeInTheDocument();
+    for (const name of Object.values(MENU)) {
+      expect(getByRole("button", { name })).toHaveTextContent(name);
+    }
+  });
+
+  test("renders a single navigation landmark", () => {
+    const { getAllByRole } = renderButtons();
+    expect(getAllByRole("navigation")).toHaveLength(1);
   });
 
   test("calls correct callbacks on button clicks", () => {
-    const resetGameMock = vi.fn();
-    const resetTotalsMock = vi.fn();
-    const openRulesModalMock = vi.fn();
-    const openGameScoresModalMock = vi.fn();
+    const resetGame = vi.fn();
+    const resetTotals = vi.fn();
+    const openRulesModal = vi.fn();
+    const openGameScoresModal = vi.fn();
 
-    const { getByRole } = render(
-      <NavigationButtons
-        resetGame={resetGameMock}
-        resetTotals={resetTotalsMock}
-        openRulesModal={openRulesModalMock}
-        openGameScoresModal={openGameScoresModalMock}
-      />,
-    );
+    const { getByRole } = renderButtons({
+      resetGame,
+      resetTotals,
+      openRulesModal,
+      openGameScoresModal,
+    });
 
-    fireEvent.click(getByRole("button", { name: /reset button/i }));
-    expect(resetGameMock).toHaveBeenCalled();
-    expect(resetTotalsMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(getByRole("button", { name: MENU.reset }));
+    expect(resetGame).toHaveBeenCalledTimes(1);
+    expect(resetTotals).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(getByRole("button", { name: /see rules button/i }));
-    expect(openRulesModalMock).toHaveBeenCalled();
+    fireEvent.click(getByRole("button", { name: MENU.rules }));
+    expect(openRulesModal).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(getByRole("button", { name: /game scores button/i }));
-    expect(openGameScoresModalMock).toHaveBeenCalled();
+    fireEvent.click(getByRole("button", { name: MENU.scores }));
+    expect(openGameScoresModal).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("NavigationButtons ripple effect", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  test("creates and removes ripple span on mousedown", () => {
-    const { getByRole } = render(
-      <NavigationButtons
-        resetGame={() => {}}
-        resetTotals={() => {}}
-        openRulesModal={() => {}}
-        openGameScoresModal={() => {}}
-      />,
+  const pressReset = (clientX: number, clientY: number) => {
+    const utils = renderButtons();
+    const resetBtn = utils.getByRole("button", { name: MENU.reset });
+    vi.spyOn(resetBtn, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(100, 50, 200, 45),
     );
+    fireEvent.mouseDown(resetBtn, { clientX, clientY });
+    return resetBtn;
+  };
 
-    const resetBtn = getByRole("button", { name: /reset button/i });
-    fireEvent.mouseDown(resetBtn);
+  test("places the ripple where the button was pressed", () => {
+    const resetBtn = pressReset(130, 70);
 
-    const ripple = resetBtn.querySelector("span");
+    const ripple = resetBtn.querySelector(".ripple");
+    expect(ripple).toHaveStyle({ left: "30px", top: "20px" });
+  });
+
+  test("removes the ripple when its animation ends", () => {
+    const resetBtn = pressReset(130, 70);
+    const ripple = resetBtn.querySelector(".ripple");
     expect(ripple).toBeInTheDocument();
 
-    vi.advanceTimersByTime(500);
-    expect(resetBtn.querySelector("span")).toBeNull();
+    fireEvent.animationEnd(ripple!);
+
+    expect(resetBtn.querySelector(".ripple")).toBeNull();
+  });
+
+  test("the ripple doesn't change the button's accessible name", () => {
+    const resetBtn = pressReset(130, 70);
+    expect(resetBtn).toHaveAccessibleName(MENU.reset);
   });
 });

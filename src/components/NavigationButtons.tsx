@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
 type NavigationButtonsProps = {
@@ -7,23 +8,30 @@ type NavigationButtonsProps = {
   openGameScoresModal: () => void;
 };
 
+type Ripple = { id: number; x: number; y: number };
+
 export default function NavigationButtons({
   resetGame,
   resetTotals,
   openRulesModal,
   openGameScoresModal,
 }: NavigationButtonsProps) {
-  const handleRippleEffect = (e: MouseEvent<HTMLButtonElement>) => {
-    const target = e.target as HTMLButtonElement;
-    const x = e.clientX - target.offsetLeft;
-    const y = e.clientY - target.offsetTop;
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const nextRippleId = useRef(0);
 
-    const ripple = document.createElement("span");
-    ripple.style.left = `${x}px`;
-    ripple.style.top = `${y}px`;
-    target.appendChild(ripple);
+  // Position the ripple where the pointer pressed, relative to the button.
+  const addRipple = (e: MouseEvent<HTMLButtonElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const ripple = {
+      id: nextRippleId.current++,
+      x: e.clientX - box.left,
+      y: e.clientY - box.top,
+    };
+    setRipples((current) => [...current, ripple]);
+  };
 
-    setTimeout(() => ripple.remove(), 500);
+  const removeRipple = (id: number) => {
+    setRipples((current) => current.filter((ripple) => ripple.id !== id));
   };
 
   const handleResetClick = () => {
@@ -35,30 +43,27 @@ export default function NavigationButtons({
     <nav className="btns">
       <button
         className="btn--reset"
-        aria-label="Reset Button"
-        data-reset-btn
         onClick={handleResetClick}
-        onMouseDown={handleRippleEffect}
+        onMouseDown={addRipple}
       >
         Reset
+        {ripples.map(({ id, x, y }) => (
+          <span
+            key={id}
+            className="ripple"
+            aria-hidden="true"
+            style={{ left: x, top: y }}
+            onAnimationEnd={() => removeRipple(id)}
+          />
+        ))}
       </button>
 
       <div className="btn-container">
-        <button
-          className="btn--dark"
-          aria-label="See Rules Button"
-          data-rules-btn
-          onClick={openRulesModal}
-        >
+        <button className="btn--dark" onClick={openRulesModal}>
           See rules
         </button>
 
-        <button
-          className="btn--dark"
-          aria-label="Game Scores Button"
-          data-game-scores-btn
-          onClick={openGameScoresModal}
-        >
+        <button className="btn--dark" onClick={openGameScoresModal}>
           Wins & losses
         </button>
       </div>

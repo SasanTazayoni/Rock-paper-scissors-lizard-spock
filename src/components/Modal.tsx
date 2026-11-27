@@ -27,6 +27,11 @@ export default function Modal({
 
     const previouslyFocused = document.activeElement;
     dialog.showModal();
+    // showModal() focuses the first button, which scrolls a tall modal to the
+    // bottom on small screens. Focus the dialog itself instead, so it opens
+    // at the top and screen readers announce its title.
+    dialog.focus();
+    dialog.scrollTop = 0;
 
     return () => {
       dialog.close();
@@ -59,6 +64,7 @@ export default function Modal({
       className={className}
       data-testid={testId}
       aria-labelledby={titleId}
+      tabIndex={-1}
       onCancel={handleCancel}
       onClick={handleClick}
     >

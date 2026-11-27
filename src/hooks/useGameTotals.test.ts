@@ -1,13 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import { test, expect, describe, vi } from "vitest";
 import { useGameTotals } from "./useGameTotals";
+import { STORAGE_KEY } from "../utils/scoreStorage";
 
-const saved = () => JSON.parse(localStorage.getItem("gameScores") ?? "null");
+const saved = () => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
 
 describe("useGameTotals hook", () => {
   test("loads stored totals from localStorage", () => {
     localStorage.setItem(
-      "gameScores",
+      STORAGE_KEY,
       JSON.stringify({ player: 3, computer: 7 }),
     );
     const { result } = renderHook(() => useGameTotals());
@@ -23,7 +24,7 @@ describe("useGameTotals hook", () => {
 
   test("recordGame increments wins or losses and saves them", () => {
     localStorage.setItem(
-      "gameScores",
+      STORAGE_KEY,
       JSON.stringify({ player: 2, computer: 1 }),
     );
     const { result } = renderHook(() => useGameTotals());
@@ -39,7 +40,7 @@ describe("useGameTotals hook", () => {
 
   test("resetTotals zeroes totals and clears storage", () => {
     localStorage.setItem(
-      "gameScores",
+      STORAGE_KEY,
       JSON.stringify({ player: 4, computer: 5 }),
     );
     const { result } = renderHook(() => useGameTotals());
@@ -48,7 +49,7 @@ describe("useGameTotals hook", () => {
 
     expect(result.current.totalWins).toBe(0);
     expect(result.current.totalLosses).toBe(0);
-    expect(localStorage.getItem("gameScores")).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   test("keeps counting in memory when storage is blocked", () => {

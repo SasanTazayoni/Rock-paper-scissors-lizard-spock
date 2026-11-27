@@ -1,30 +1,28 @@
 import { describe, test, expect, vi } from "vitest";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import GameComponent from "./GameComponent";
 import * as gameLogic from "./utils/gameLogic.ts";
 import * as scoreStorage from "./utils/scoreStorage";
-
-vi.mock("./components/Footer", () => ({
-  default: () => <footer>Footer Mock</footer>,
-}));
+import { STORAGE_KEY } from "./utils/scoreStorage";
+import { MENU, clickTimes } from "./test/helpers";
 
 const pressEscape = (dialog: HTMLElement) =>
   fireEvent(dialog, new Event("cancel", { cancelable: true }));
 
 describe("GameComponent – initial render", () => {
-  test("shows the Rules modal on first load, with focus on Play game", () => {
-    const { getByTestId, getByRole } = render(<GameComponent />);
+  test("shows the Rules modal on first load, with focus on it", () => {
+    const { getByTestId } = render(<GameComponent />);
 
     expect(getByTestId("rules-modal")).toHaveAttribute("open");
-    expect(getByRole("button", { name: /play game/i })).toHaveFocus();
+    expect(getByTestId("rules-modal")).toHaveFocus();
   });
 
-  test("renders navigation buttons (Reset, See Rules, Game Scores)", () => {
-    const { getByLabelText } = render(<GameComponent />);
+  test("renders navigation buttons (Reset, See rules, Wins & losses)", () => {
+    render(<GameComponent />);
 
-    expect(getByLabelText("Reset Button")).toBeInTheDocument();
-    expect(getByLabelText("See Rules Button")).toBeInTheDocument();
-    expect(getByLabelText("Game Scores Button")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: MENU.reset })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: MENU.rules })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: MENU.scores })).toBeInTheDocument();
   });
 
   test("renders selection buttons (rock, paper, scissors, lizard, spock)", () => {
@@ -112,7 +110,7 @@ describe("Game Over Behavior", () => {
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
 
     expect(getByLabelText("Player score").textContent).toBe("5");
     expect(getByTestId("game-scores-modal")).toBeInTheDocument();
@@ -129,7 +127,7 @@ describe("Game Over Behavior", () => {
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
 
     expect(getByLabelText("Computer score").textContent).toBe("5");
     expect(getByTestId("game-scores-modal")).toBeInTheDocument();
@@ -147,7 +145,7 @@ describe("Game Over Behavior", () => {
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
     expect(saveSpy).toHaveBeenCalledTimes(1);
 
     // The Scores modal is open, but the selection buttons are still reachable
@@ -163,12 +161,12 @@ describe("Game Over Behavior", () => {
 
   test("shows totals saved by a previous visit", () => {
     localStorage.setItem(
-      "gameScores",
+      STORAGE_KEY,
       JSON.stringify({ player: 3, computer: 2 }),
     );
 
-    const { getByLabelText, getByTestId } = render(<GameComponent />);
-    fireEvent.click(getByLabelText("Game Scores Button"));
+    const { getByTestId } = render(<GameComponent />);
+    fireEvent.click(screen.getByRole("button", { name: MENU.scores }));
 
     expect(getByTestId("total-wins")).toHaveTextContent("3");
     expect(getByTestId("total-losses")).toHaveTextContent("2");
@@ -185,21 +183,21 @@ describe("when localStorage is blocked", () => {
     vi.spyOn(Storage.prototype, "removeItem").mockImplementation(blocked);
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
-    const { getByRole, getByLabelText, getByTestId } = render(
+    const { getByRole, getByTestId } = render(
       <GameComponent />,
     );
     const rockBtn = getByRole("button", { name: /Rock icon/i });
 
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
     expect(getByTestId("total-wins")).toHaveTextContent("1");
 
     fireEvent.click(getByTestId("continue-button"));
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
     expect(getByTestId("total-wins")).toHaveTextContent("2");
 
     fireEvent.click(getByTestId("continue-button"));
-    fireEvent.click(getByLabelText("Reset Button"));
-    fireEvent.click(getByLabelText("Game Scores Button"));
+    fireEvent.click(screen.getByRole("button", { name: MENU.reset }));
+    fireEvent.click(screen.getByRole("button", { name: MENU.scores }));
     expect(getByTestId("total-wins")).toHaveTextContent("0");
   });
 });
@@ -218,7 +216,7 @@ describe("Reset button", () => {
       expect(getByLabelText("Player score").textContent).toBe("1");
     });
 
-    fireEvent.click(getByLabelText("Reset Button"));
+    fireEvent.click(screen.getByRole("button", { name: MENU.reset }));
 
     await waitFor(() => {
       expect(getByLabelText("Player score").textContent).toBe("0");
@@ -230,18 +228,18 @@ describe("Reset button", () => {
 
   test("clicking Reset also clears saved totals", () => {
     localStorage.setItem(
-      "gameScores",
+      STORAGE_KEY,
       JSON.stringify({ player: 3, computer: 2 }),
     );
 
-    const { getByLabelText, getByTestId } = render(<GameComponent />);
+    const { getByTestId } = render(<GameComponent />);
 
-    fireEvent.click(getByLabelText("Reset Button"));
-    fireEvent.click(getByLabelText("Game Scores Button"));
+    fireEvent.click(screen.getByRole("button", { name: MENU.reset }));
+    fireEvent.click(screen.getByRole("button", { name: MENU.scores }));
 
     expect(getByTestId("total-wins")).toHaveTextContent("0");
     expect(getByTestId("total-losses")).toHaveTextContent("0");
-    expect(localStorage.getItem("gameScores")).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });
 
@@ -263,13 +261,13 @@ describe("Rules Modal Close Behavior", () => {
   });
 
   test("closing a reopened Rules modal returns focus to See rules", () => {
-    const { getByLabelText, getByText } = render(<GameComponent />);
+    const { getByText } = render(<GameComponent />);
     fireEvent.click(getByText(/play game/i));
 
-    const seeRules = getByLabelText("See Rules Button");
+    const seeRules = screen.getByRole("button", { name: MENU.rules });
     seeRules.focus();
     fireEvent.click(seeRules);
-    expect(getByText(/play game/i)).toHaveFocus();
+    expect(screen.getByTestId("rules-modal")).toHaveFocus();
 
     fireEvent.click(getByText(/play game/i));
     expect(seeRules).toHaveFocus();
@@ -284,9 +282,7 @@ describe("ScoresModal close behavior", () => {
     vi.spyOn(gameLogic, "playGameRound").mockReturnValue("WIN");
 
     const rockBtn = getByRole("button", { name: /Rock icon/i });
-    for (let i = 0; i < 5; i++) {
-      fireEvent.click(rockBtn);
-    }
+    clickTimes(rockBtn);
 
     await waitFor(() => {
       expect(queryByTestId("game-scores-modal")).toBeInTheDocument();
@@ -309,7 +305,7 @@ describe("ScoresModal close behavior", () => {
     );
 
     const rockBtn = getByRole("button", { name: /Rock icon/i });
-    for (let i = 0; i < 5; i++) fireEvent.click(rockBtn);
+    clickTimes(rockBtn);
     expect(getByRole("dialog", { name: "Game Over! You lost!" })).toBeVisible();
 
     pressEscape(getByTestId("game-scores-modal"));
@@ -328,7 +324,7 @@ describe("ScoresModal close behavior", () => {
     fireEvent.click(rockBtn);
     fireEvent.click(rockBtn);
 
-    fireEvent.click(getByLabelText("Game Scores Button"));
+    fireEvent.click(screen.getByRole("button", { name: MENU.scores }));
     expect(getByRole("dialog", { name: "Game Scores" })).toBeVisible();
 
     fireEvent.click(getByTestId("continue-button"));
@@ -341,7 +337,7 @@ describe("ScoresModal close behavior", () => {
 
 describe("RulesModal behavior", () => {
   test("clicking See rules button re‑opens the Rules modal (openRulesModal)", async () => {
-    const { getByLabelText, getByText, queryByTestId } = render(
+    const { getByText, queryByTestId } = render(
       <GameComponent />,
     );
 
@@ -350,7 +346,7 @@ describe("RulesModal behavior", () => {
       expect(queryByTestId("rules-modal")).not.toBeInTheDocument(),
     );
 
-    const seeRulesBtn = getByLabelText("See Rules Button");
+    const seeRulesBtn = screen.getByRole("button", { name: MENU.rules });
     fireEvent.click(seeRulesBtn);
 
     await waitFor(() =>

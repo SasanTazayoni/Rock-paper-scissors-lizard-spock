@@ -63,7 +63,7 @@ describe("ScoresModal", () => {
     expect(closeHandler).toHaveBeenCalledTimes(1);
   });
 
-  test("opens as a modal with focus on Continue", () => {
+  test("opens as a modal with focus on the dialog", () => {
     const { getByTestId } = render(
       <ScoresModal
         outcome={null}
@@ -74,6 +74,6 @@ describe("ScoresModal", () => {
     );
 
     expect(getByTestId("game-scores-modal")).toHaveAttribute("open");
-    expect(getByTestId("continue-button")).toHaveFocus();
+    expect(getByTestId("game-scores-modal")).toHaveFocus();
   });
 });
