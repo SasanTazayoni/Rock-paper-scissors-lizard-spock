@@ -25,10 +25,13 @@ describe("Footer", () => {
     ).toBeInTheDocument();
   });
 
-  test("contains a link to the GitHub profile", () => {
+  test("contains a link to the GitHub repository", () => {
     const { getByRole } = render(<Footer />);
     const link = getByRole("link", { name: /github profile link/i });
-    expect(link).toHaveAttribute("href", "https://github.com/SasanTazayoni");
+    expect(link).toHaveAttribute(
+      "href",
+      "https://github.com/SasanTazayoni/Rock-paper-scissors-lizard-spock",
+    );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
