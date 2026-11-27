@@ -70,15 +70,9 @@ describe("GameComponent – initial render", () => {
   });
 
   test("ScoresModal: should not be visible initially", () => {
-    const { container } = render(<GameComponent />);
+    const { queryByTestId } = render(<GameComponent />);
 
-    const scoresModal = container.querySelector("[data-scores-modal]");
-
-    if (scoresModal) {
-      expect(scoresModal.classList.contains("open")).toBe(false);
-    } else {
-      expect(scoresModal).toBeNull();
-    }
+    expect(queryByTestId("game-scores-modal")).not.toBeInTheDocument();
   });
 });
 
