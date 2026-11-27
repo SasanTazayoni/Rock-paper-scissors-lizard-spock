@@ -2,6 +2,13 @@
 
 :root {
   --color-primary: rgb(232, 227, 255);
+  /* Both at least 4.5:1 on --color-primary (WCAG AA for normal text). */
+  --color-green: #0f6e0f; /* 5.2:1 */
+  --color-red: #c00000; /* 5.2:1 */
+}
+
+button {
+  font: inherit;
 }
 
 html,
@@ -59,27 +66,35 @@ main {
   display: flex;
 }
 
-.btn--reset {
+/* Outlined nav buttons. Each variant only sets --btn-color. */
+
+.btn--reset,
+.btn--dark {
+  --btn-color: darkblue;
   margin: 20px;
   display: block;
-  font-family: "Exo 2", Arial, Helvetica, sans-serif;
   font-size: 1.2rem;
   cursor: pointer;
-  color: red;
-  border: red 0.125em solid;
+  color: var(--btn-color);
+  border: var(--btn-color) 0.125em solid;
   text-decoration: none;
   padding: 0.25em 1.25em;
   border-radius: 0.25em;
   background: var(--color-primary);
   text-shadow: 0 0 0.125em hsl(0 0% 100% / 0.3), 0 0 0.45em var(--color-primary);
-  box-shadow: inset 0 0 0.25em 0 red, 0 0 0.25em 0 red;
+  box-shadow: inset 0 0 0.25em 0 var(--btn-color), 0 0 0.25em 0 var(--btn-color);
   position: relative;
   transition: background-color 0.3s;
   width: 200px;
   height: 45px;
 }
 
-.btn--reset::after {
+.btn--reset {
+  --btn-color: var(--color-red);
+}
+
+.btn--reset::after,
+.btn--dark::after {
   content: "";
   position: absolute;
   top: 0;
@@ -87,18 +102,21 @@ main {
   bottom: 0;
   left: 0;
   opacity: 0;
-  box-shadow: 0 0 0.5em 0.25em red;
+  box-shadow: 0 0 0.5em 0.25em var(--btn-color);
   transition: all 0.3s;
 }
 
 .btn--reset:hover,
-.btn--reset:focus {
-  background: red;
+.btn--reset:focus,
+.btn--dark:hover,
+.btn--dark:focus {
+  background: var(--btn-color);
   color: var(--color-primary);
   text-shadow: none;
 }
 
-.btn--reset:hover::after {
+.btn--reset:hover::after,
+.btn--dark:hover::after {
   opacity: 1;
 }
 
@@ -106,7 +124,7 @@ main {
 
 .btn--reset > span {
   position: absolute;
-  background: red;
+  background: var(--btn-color);
   transform: translate(-50%, -50%);
   pointer-events: none;
   border-radius: 50%;
@@ -127,49 +145,6 @@ main {
   }
 }
 
-.btn--dark {
-  margin: 20px;
-  display: block;
-  font-family: "Exo 2", Arial, Helvetica, sans-serif;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: darkblue;
-  border: darkblue 0.125em solid;
-  text-decoration: none;
-  padding: 0.25em 1.25em;
-  border-radius: 0.25em;
-  background: var(--color-primary);
-  text-shadow: 0 0 0.125em hsl(0 0% 100% / 0.3), 0 0 0.45em var(--color-primary);
-  box-shadow: inset 0 0 0.25em 0 darkblue, 0 0 0.25em 0 darkblue;
-  position: relative;
-  transition: background-color 0.3s;
-  width: 200px;
-  height: 45px;
-}
-
-.btn--dark::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  box-shadow: 0 0 0.5em 0.25em darkblue;
-  transition: all 0.3s;
-}
-
-.btn--dark:hover,
-.btn--dark:focus {
-  background: darkblue;
-  color: var(--color-primary);
-  text-shadow: none;
-}
-
-.btn--dark:hover::after {
-  opacity: 1;
-}
-
 h1 {
   text-align: center;
   font-size: 50px;
@@ -183,8 +158,8 @@ h1 {
 
 .selection {
   background: none;
-  outline: none;
   border: none;
+  border-radius: 0.2em;
   font-size: 100px;
   cursor: pointer;
   margin: 0 20px;
@@ -196,6 +171,11 @@ h1 {
 .selection:focus-visible {
   opacity: 1;
   transform: scale(1.15);
+}
+
+.selection:focus-visible {
+  outline: 3px solid darkblue;
+  outline-offset: 4px;
 }
 
 .scores {
@@ -214,11 +194,11 @@ h1 {
 
 .score {
   font-size: 150%;
-  margin-left: 5px;
 }
 
+/* Losing moves are dimmed but still clearly visible. */
 .result {
-  opacity: 0.3;
+  opacity: 0.6;
   font-size: 40px;
   padding: 10px;
 }
@@ -304,10 +284,6 @@ h1 {
     font-size: 20px;
     margin-top: 20px;
   }
-
-  .score {
-    margin-left: 0;
-  }
 }
 
 @media screen and (max-width: 376px) {
@@ -328,6 +304,9 @@ h1 {
 
 .rules-modal,
 .game-scores-modal {
+  /* Brighter score colours for the dark blue background. */
+  --color-green: rgb(1, 207, 1); /* 7.2:1 on darkblue */
+  --color-red: #ff6b6b; /* 5.5:1 on darkblue */
   background: darkblue;
   border: 4px solid var(--color-primary);
   border-radius: 20px;
@@ -388,7 +367,6 @@ h2 {
 .btn {
   margin: 40px auto 20px;
   display: block;
-  font-family: "Exo 2", Arial, Helvetica, sans-serif;
   font-size: 1.2rem;
   cursor: pointer;
   color: var(--color-primary);
@@ -461,11 +439,11 @@ h2 {
 }
 
 .player-game-score {
-  color: rgb(1, 207, 1);
+  color: var(--color-green);
 }
 
 .computer-game-score {
-  color: red;
+  color: var(--color-red);
 }
 
 .player-game-score,
