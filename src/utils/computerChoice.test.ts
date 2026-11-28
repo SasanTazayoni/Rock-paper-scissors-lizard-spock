@@ -16,3 +16,14 @@ describe("getComputerChoice", () => {
     },
   );
 });
+
+describe("getComputerChoice guard", () => {
+  test("throws if Math.random returns an out-of-range value", () => {
+    // Math.random() is [0, 1), so 1 can never happen — but if it did the
+    // index would be past the end of SELECTIONS.
+    vi.spyOn(Math, "random").mockReturnValue(1);
+    expect(() => getComputerChoice()).toThrow(
+      `No choice at index ${SELECTIONS.length}`,
+    );
+  });
+});

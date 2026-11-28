@@ -1,6 +1,14 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
+import * as React from "react";
 import Modal from "./Modal";
+
+// Lets one test simulate the dialog ref never being attached. Every other
+// test gets React's real useRef.
+vi.mock("react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react")>();
+  return { ...actual, useRef: vi.fn(actual.useRef) };
+});
 
 const renderModal = (onClose = vi.fn()) => {
   const utils = render(
@@ -78,5 +86,34 @@ describe("Modal", () => {
     fireEvent.click(getByRole("heading"), { clientX: 0, clientY: 0 });
 
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  test("does not restore focus when nothing was focused before opening", () => {
+    vi.spyOn(document, "activeElement", "get").mockReturnValue(null);
+    const { unmount, dialog } = renderModal();
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+
+    unmount();
+
+    expect(dialog).not.toHaveAttribute("open");
+    expect(focus).not.toHaveBeenCalled();
+  });
+
+  test("does nothing if the dialog element is not attached", () => {
+    // A ref whose current stays null even after React tries to set it.
+    const detachedRef = {
+      get current() {
+        return null;
+      },
+      set current(_value) {},
+    };
+    vi.mocked(React.useRef).mockReturnValueOnce(detachedRef);
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+
+    const { dialog, unmount } = renderModal();
+
+    expect(showModal).not.toHaveBeenCalled();
+    expect(dialog).not.toHaveAttribute("open");
+    expect(() => unmount()).not.toThrow();
   });
 });
